@@ -16,10 +16,20 @@ const Header: React.FC<HeaderProps> = ({
   isMobileMenuOpen,
   setIsMobileMenuOpen,
 }) => {
+  const handleTitleClick = () => {
+    setActiveSection('home');
+    setIsMobileMenuOpen(false);
+  };
+
   return (
     <header className="fixed w-full bg-white border-b border-black z-50">
       <nav className="container mx-auto px-4 py-4 flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-black">TraceSafe</h1>
+        <button 
+          onClick={handleTitleClick}
+          className="text-2xl font-bold text-black hover:text-gray-700 transition-colors"
+        >
+          TraceSafe
+        </button>
         <div className="hidden md:flex space-x-8">
           {menuItems.map((item) => (
             <button
