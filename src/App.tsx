@@ -1,12 +1,24 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Scan, Menu, X, Camera } from 'lucide-react';
-import { Html5QrcodeScanner } from 'html5-qrcode';
+import { Html5QrcodeScanner, Html5QrcodeSupportedFormats } from 'html5-qrcode';
+
+interface Stage {
+  title: string;
+  details: string;
+}
+
+interface ScannedData {
+  productName: string;
+  stages: Stage[];
+  error?: string;
+}
 
 function App() {
   const [isProductVisible, setIsProductVisible] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [isScannerOpen, setIsScannerOpen] = useState(false);
   const scannerRef = useRef<Html5QrcodeScanner | null>(null);
+  const [scannedData, setScannedData] = useState<ScannedData | null>(null);
 
   useEffect(() => {
     if (isScannerOpen) {
@@ -14,28 +26,48 @@ function App() {
         "reader",
         { 
           fps: 10,
-          qrbox: {width: 250, height: 250},
-          aspectRatio: 1.0
+          qrbox: {width: 300, height: 300},
+          aspectRatio: 1.0,
+          formatsToSupport: [ Html5QrcodeSupportedFormats.QR_CODE ],
+          showTorchButtonIfSupported: true,
+          showZoomSliderIfSupported: true,
+          defaultZoomValueIfSupported: 2
         },
         false
       );
       
       scannerRef.current.render((decodedText) => {
-        console.log(`Code scanned = ${decodedText}`);
-        setIsScannerOpen(false);
-        setIsProductVisible(true);
+        console.log('Raw scan result:', decodedText);
+        try {
+          console.log('Attempting to parse:', decodedText);
+          const data = JSON.parse(decodedText);
+          console.log('Successfully parsed data:', data);
+          setScannedData(data);
+          setIsProductVisible(true);
+          setIsScannerOpen(false);
+        } catch (error) {
+          console.error('Parse error details:', error);
+          console.error('Failed to parse text:', decodedText);
+          setScannedData({
+            productName: '',
+            stages: [],
+            error: error instanceof Error ? error.message : 'Invalid QR code format'
+          });
+          setIsProductVisible(true);
+          setIsScannerOpen(false);
+        }
       }, (error) => {
-        console.warn(error);
+        console.warn('Scan error:', error);
       });
     } else {
       if (scannerRef.current) {
-        scannerRef.current.clear();
+        scannerRef.current.clear().catch(err => console.warn('Cleanup error:', err));
       }
     }
 
     return () => {
       if (scannerRef.current) {
-        scannerRef.current.clear();
+        scannerRef.current.clear().catch(err => console.warn('Cleanup error:', err));
       }
     };
   }, [isScannerOpen]);
@@ -127,39 +159,30 @@ function App() {
           )}
 
           {/* Product Details Section */}
-          {isProductVisible && (
+          {isProductVisible && scannedData && (
             <div className="max-w-2xl mx-auto mt-12 p-8 border border-black rounded-lg">
-              <h3 className="text-2xl font-bold text-black mb-6">
-                Product Journey: Organic Milk
-              </h3>
-              <div className="space-y-4">
-                {[
-                  {
-                    title: 'Farm',
-                    details: 'Smith Dairy, Ontario - Harvested March 20, 2025',
-                  },
-                  {
-                    title: 'Processed',
-                    details: 'Maple Dairy Plant - March 21, 2025',
-                  },
-                  {
-                    title: 'Certified',
-                    details: 'Organic, Verified by USDA',
-                  },
-                  {
-                    title: 'Retailer',
-                    details: 'FreshMart - Received March 23, 2025',
-                  },
-                ].map((item) => (
-                  <div
-                    key={item.title}
-                    className="border-b border-gray-200 pb-4 last:border-0"
-                  >
-                    <div className="font-semibold text-black">{item.title}</div>
-                    <div className="text-gray-700">{item.details}</div>
+              {scannedData.error ? (
+                <div className="text-red-600 text-center">
+                  {scannedData.error}
+                </div>
+              ) : (
+                <>
+                  <h3 className="text-2xl font-bold text-black mb-6">
+                    Product: {scannedData.productName}
+                  </h3>
+                  <div className="space-y-4">
+                    {scannedData.stages.map((item, index) => (
+                      <div
+                        key={index}
+                        className="border-b border-gray-200 pb-4 last:border-0"
+                      >
+                        <div className="font-semibold text-black">{item.title}</div>
+                        <div className="text-gray-700">{item.details}</div>
+                      </div>
+                    ))}
                   </div>
-                ))}
-              </div>
+                </>
+              )}
             </div>
           )}
         </div>
