@@ -37,17 +37,12 @@ function App() {
       );
       
       scannerRef.current.render((decodedText) => {
-        console.log('Raw scan result:', decodedText);
         try {
-          console.log('Attempting to parse:', decodedText);
           const data = JSON.parse(decodedText);
-          console.log('Successfully parsed data:', data);
           setScannedData(data);
           setIsProductVisible(true);
           setIsScannerOpen(false);
         } catch (error) {
-          console.error('Parse error details:', error);
-          console.error('Failed to parse text:', decodedText);
           setScannedData({
             productName: '',
             stages: [],
@@ -76,43 +71,26 @@ function App() {
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
-      {/* Header */}
+      {/* Header - unchanged */}
       <header className="fixed w-full bg-white border-b border-black z-50">
         <nav className="container mx-auto px-4 py-4 flex justify-between items-center">
           <h1 className="text-2xl font-bold text-black">TraceSafe</h1>
           <div className="hidden md:flex space-x-8">
             {menuItems.map((item) => (
-              <a
-                key={item}
-                href="#"
-                className="text-black hover:bg-black hover:text-white px-3 py-2 rounded-md transition-colors"
-              >
+              <a key={item} href="#" className="text-black hover:bg-black hover:text-white px-3 py-2 rounded-md transition-colors">
                 {item}
               </a>
             ))}
           </div>
-          <button 
-            className="md:hidden"
-            onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          >
-            {isMobileMenuOpen ? (
-              <X className="h-6 w-6 text-black" />
-            ) : (
-              <Menu className="h-6 w-6 text-black" />
-            )}
+          <button className="md:hidden" onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}>
+            {isMobileMenuOpen ? <X className="h-6 w-6 text-black" /> : <Menu className="h-6 w-6 text-black" />}
           </button>
         </nav>
-
-        {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden bg-white border-b border-black">
             <div className="px-4 py-2">
               {menuItems.map((item) => (
-                <a
-                  key={item}
-                  href="#"
-                  className="block py-3 text-black hover:bg-black hover:text-white px-3 rounded-md transition-colors"
-                >
+                <a key={item} href="#" className="block py-3 text-black hover:bg-black hover:text-white px-3 rounded-md transition-colors">
                   {item}
                 </a>
               ))}
@@ -140,16 +118,13 @@ function App() {
             </button>
           </div>
 
-          {/* QR Scanner */}
+          {/* QR Scanner - unchanged */}
           {isScannerOpen && (
             <div className="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50">
               <div className="bg-white p-6 rounded-lg max-w-lg w-full mx-4">
                 <div className="flex justify-between items-center mb-4">
                   <h3 className="text-xl font-bold">Scan QR Code</h3>
-                  <button 
-                    onClick={() => setIsScannerOpen(false)}
-                    className="text-black hover:text-gray-700"
-                  >
+                  <button onClick={() => setIsScannerOpen(false)} className="text-black hover:text-gray-700">
                     <X className="h-6 w-6" />
                   </button>
                 </div>
@@ -158,28 +133,39 @@ function App() {
             </div>
           )}
 
-          {/* Product Details Section */}
+          {/* Product Details Section - Enhanced with Chain Visualization */}
           {isProductVisible && scannedData && (
-            <div className="max-w-2xl mx-auto mt-12 p-8 border border-black rounded-lg">
+            <div className="max-w-3xl mx-auto mt-12 p-8 border border-black rounded-lg bg-white shadow-lg">
               {scannedData.error ? (
                 <div className="text-red-600 text-center">
                   {scannedData.error}
                 </div>
               ) : (
                 <>
-                  <h3 className="text-2xl font-bold text-black mb-6">
-                    Product: {scannedData.productName}
+                  <h3 className="text-3xl font-bold text-black mb-12 text-center border-b pb-4">
+                    {scannedData.productName}
                   </h3>
-                  <div className="space-y-4">
-                    {scannedData.stages.map((item, index) => (
-                      <div
-                        key={index}
-                        className="border-b border-gray-200 pb-4 last:border-0"
-                      >
-                        <div className="font-semibold text-black">{item.title}</div>
-                        <div className="text-gray-700">{item.details}</div>
-                      </div>
-                    ))}
+                  <div className="relative">
+                    {/* Chain Timeline */}
+                    <div className="space-y-12">
+                      {scannedData.stages.map((item, index) => (
+                        <div key={index} className="relative flex items-start">
+                          {/* Chain Circle */}
+                          <div className="flex-shrink-0 w-14 h-14 rounded-full bg-black flex items-center justify-center text-white font-bold text-lg z-10 shadow-md">
+                            {index + 1}
+                          </div>
+                          {/* Chain Link */}
+                          {index < scannedData.stages.length - 1 && (
+                            <div className="absolute left-7 top-14 w-0.5 h-[calc(100%+1rem)] bg-gradient-to-b from-black to-gray-300"></div>
+                          )}
+                          {/* Content */}
+                          <div className="ml-8 bg-gray-50 p-6 rounded-xl w-full border border-gray-200 shadow-sm hover:shadow-md transition-shadow">
+                            <div className="font-bold text-black text-xl mb-2">{item.title}</div>
+                            <div className="text-gray-600 text-lg">{item.details}</div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 </>
               )}
@@ -188,7 +174,7 @@ function App() {
         </div>
       </main>
 
-      {/* Footer */}
+      {/* Footer - unchanged */}
       <footer className="bg-black text-white py-6">
         <div className="container mx-auto px-4 text-center">
           © 2025 TraceSafe. Built with Blockchain.
