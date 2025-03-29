@@ -6,10 +6,15 @@ import ProductDetails from './components/ProductDetails';
 import Home from './components/Home';
 import HowItWorks from './components/HowItWorks';
 import AboutUs from './components/AboutUs';
+import { getProductDetails } from './api/productApi';
 
 interface Stage {
   title: string;
   details: string;
+  data?: {
+    [key: string]: string;
+  };
+  hash?: string;
 }
 
 interface ScannedData {
@@ -42,17 +47,19 @@ function App() {
         false
       );
       
-      scannerRef.current.render((decodedText) => {
+      scannerRef.current.render(async (decodedText) => {
         try {
-          const data = JSON.parse(decodedText);
-          setScannedData(data);
+          // The QR code now contains just the product ID
+          const productId = decodedText.trim();
+          const productData = await getProductDetails(productId);
+          setScannedData(productData);
           setIsProductVisible(true);
           setIsScannerOpen(false);
         } catch (error) {
           setScannedData({
             productName: '',
             stages: [],
-            error: error instanceof Error ? error.message : 'Invalid QR code format'
+            error: error instanceof Error ? error.message : 'Failed to fetch product details'
           });
           setIsProductVisible(true);
           setIsScannerOpen(false);
